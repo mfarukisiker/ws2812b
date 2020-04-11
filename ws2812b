@@ -1,0 +1,158 @@
+#include <stdlib.h>
+const int Cin=2;
+const int Din=3;
+int i=0;
+void clk(int edge)
+{
+  for(int i=0;i<edge;i++)
+  {
+  digitalWrite(Cin,HIGH);
+ // delay(1);
+  digitalWrite(Cin,LOW);
+ // delay(1);
+  }
+}
+
+void send_data(uint8_t data)
+{
+  if(data)  digitalWrite(Din,HIGH);
+  else      digitalWrite(Din,LOW);
+}
+
+void start_frame()
+{
+  send_data(0);
+  clk(32);
+}
+void end_frame()
+{
+  send_data(1);
+  clk(32);
+}
+void sign()
+{
+  send_data(1);
+  clk(3);
+}
+
+void Global(uint8_t adj)//max 31 brightness
+{
+  if(adj<32)
+  {
+    for(int i=0; i<5; i++) 
+      {
+         if((adj & B00000001)==1)
+         {
+          send_data(1);
+          //Serial.println("1");
+         }
+         else{
+          send_data(0);
+          //Serial.println("0");
+         }
+         clk(1); 
+         adj=adj>>1; 
+      }
+  }
+}
+
+void BGR(uint8_t b,uint8_t g,uint8_t r)
+{
+  for(int i=0; i<8; i++)
+  {
+     if((b & B00000001)==1)
+     {
+      send_data(1);
+      //Serial.println("1");
+     }
+     else{
+      send_data(0);
+      //Serial.println("0");
+     }
+     clk(1); 
+     b=b>>1; 
+  }
+  for(int i=0; i<8; i++)
+  {
+     if((g & B00000001)==1)
+     {
+      send_data(1);
+      //Serial.println("1");
+     }
+     else{
+      send_data(0);
+      //Serial.println("0");
+     }
+     clk(1); 
+     g=g>>1; 
+  }
+  for(int i=0; i<8; i++)
+  {
+     if((r & B00000001)==1)
+     {
+      send_data(1);
+      //Serial.println("1");
+     }
+     else{
+      send_data(0);
+      //Serial.println("0");
+     }
+     clk(1); 
+     r=r>>1; 
+  }
+}
+void led_yak(uint8_t led_number,uint8_t b,uint8_t g,uint8_t r)
+{
+  start_frame();
+  
+  for(int j=0;j<9;j++)
+  {
+    if(led_number==j)
+    {
+      sign();
+      Global(5);
+      BGR(b,g,r);      
+    }
+    else{
+      sign();
+      Global(0);
+      BGR(0,0,0);
+    }
+  
+   
+  }
+  end_frame();
+  Serial.println("---end----");
+}
+void set_all_zero()
+{
+  
+}
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(Cin,OUTPUT);
+  pinMode(Din,OUTPUT);
+  digitalWrite(Cin,LOW);
+  digitalWrite(Cin,HIGH);
+  Serial.begin(9600);  
+  Serial.println("--- Start Serial Monitor SEND_RCVE ---\n");
+  led_yak(8,255,255,0);
+  
+  //Global(4);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+   
+   if(i==9) i=0;  
+   led_yak(i,rand()%2,0,2);
+   delay(10);
+   i++;
+   if(i==9) i=0; 
+   led_yak(i,rand()%2,2,2 );
+   delay(10);
+   i++;
+
+   if(i==9) i=0; 
+       
+}
